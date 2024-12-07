@@ -23,6 +23,17 @@ def _resolve_with_ipify():
         return None
 
 
+def _resolve_with_1111():
+    try:
+        response = requests.get("https://1.1.1.1/cdn-cgi/trace")
+        lines = response.text.split("\n")
+        response_map = {line.split("=")[0]: line.split("=")[1] for line in lines if "=" in line}
+        return response_map.get("ip")
+    except Exception as e:
+        print(f"Failed to resolve with cloudflare: {e}")
+        return None
+
+
 def _resolve_with_cloudflare():
     try:
         response = requests.get("https://cloudflare.com/cdn-cgi/trace")
@@ -38,6 +49,7 @@ def resolve_ip() -> Optional[str]:
     resolvers: List[Callable[[], Optional[str]]] = [
         _resolve_with_icanhazip,
         _resolve_with_ipify,
+        _resolve_with_1111,
         _resolve_with_cloudflare,
     ]
 
