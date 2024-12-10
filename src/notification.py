@@ -5,16 +5,28 @@ import requests
 _DOCKER_HOST_IP = "127.0.0.1"
 
 
+def _is_notification_enabled():
+    return os.environ.get("UNRAID_NOTIFY", 'false').lower() in ('1', 'true', 't', 'yes', 'y')
+
+
 def _send_unraid_notification(subject: str, description: str, severity: str, message: str):
-    unraid_pass = os.environ.get("UNRAID_PASS", '').strip()
-    if not unraid_pass:
+    if not _is_notification_enabled():
         return
+
+    # https://github.com/unraid/webgui/blob/3083474d352fd030f6f0ca8241ba3087c25cd009/emhttp/plugins/dynamix/include/local_prepend.php#L36
+    ini = requests.get(f'http://{_DOCKER_HOST_IP}/state/var.ini')
+    csrf_token = None
+    for line in ini.text.split("\n"):
+        line = line.strip()
+        if line.startswith("csrf_token="):
+            csrf_token = line.replace("csrf_token=", "").replace("\"", "")
 
     headers = {
         'Content-Type': 'application/x-www-form-urlencoded',
     }
 
     data = {
+        'csrf_token': csrf_token,
         'cmd': 'add',
         'e': 'Cloudflare-DNS-Resolver',
         's': subject,
@@ -23,14 +35,7 @@ def _send_unraid_notification(subject: str, description: str, severity: str, mes
         'message': message,
     }
 
-    # auth = ('root', unraid_pass)
-
-    response = requests.post(
-        f'http://{_DOCKER_HOST_IP}/webGui/include/Notify.php',
-        headers=headers,
-        data=data,
-        # auth=auth
-    )
+    response = requests.post(f'http://{_DOCKER_HOST_IP}/webGui/include/Notify.php', headers=headers, data=data)
 
     if not response.ok:
         print(f"Failed to send notification: {response.text}")
