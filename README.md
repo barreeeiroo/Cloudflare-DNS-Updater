@@ -45,3 +45,20 @@ Run it on Custom Schedule at: `* * * * *` (every minute), for example.
 
 docker container start cloudflare_resolver
 ```
+
+### Enable Notifications
+
+1. Create a pipe: `mkfifo /mnt/user/appdata/notify-pipe`.
+2. Set up Unraid to listen and forward to the `notify` script (this is considered unsafe, make sure you don't use this
+  for anything else!):
+
+```bash
+while true; do eval "/usr/local/emhttp/webGui/scripts/notify $(cat /mnt/user/appdata/notify-pipe)"; done &
+```
+
+3. Add the following volume to the Docker Compose:
+
+```yml
+    volumes:
+      - /mnt/user/appdata/notify-pipe:/notify-pipe
+```

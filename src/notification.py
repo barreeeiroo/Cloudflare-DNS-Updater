@@ -1,44 +1,29 @@
-import os
+import json
+from pathlib import Path
 
-import requests
-
-_DOCKER_HOST_IP = "127.0.0.1"
+_DOCKER_NOTIFY_PIPE = Path("/notify-pipe")
 
 
 def _is_notification_enabled():
-    return os.environ.get("UNRAID_NOTIFY", 'false').lower() in ('1', 'true', 't', 'yes', 'y')
+    return _DOCKER_NOTIFY_PIPE.exists() and _DOCKER_NOTIFY_PIPE.is_fifo()
 
 
 def _send_unraid_notification(subject: str, description: str, severity: str, message: str):
     if not _is_notification_enabled():
         return
 
-    # https://github.com/unraid/webgui/blob/3083474d352fd030f6f0ca8241ba3087c25cd009/emhttp/plugins/dynamix/include/local_prepend.php#L36
-    ini = requests.get(f'http://{_DOCKER_HOST_IP}/state/var.ini')
-    csrf_token = None
-    for line in ini.text.split("\n"):
-        line = line.strip()
-        if line.startswith("csrf_token="):
-            csrf_token = line.replace("csrf_token=", "").replace("\"", "")
-
-    headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
-    }
-
     data = {
-        'csrf_token': csrf_token,
-        'cmd': 'add',
         'e': 'Cloudflare-DNS-Resolver',
         's': subject,
         'd': description,
         'i': severity,
-        'message': message,
+        'm': message,
     }
+    args = [f"-{key} {json.dumps(value)}" for key, value in data.items()]
+    param = " ".join(args)
 
-    response = requests.post(f'http://{_DOCKER_HOST_IP}/webGui/include/Notify.php', headers=headers, data=data)
-
-    if not response.ok:
-        print(f"Failed to send notification: {response.text}")
+    with open(_DOCKER_NOTIFY_PIPE, "w") as fifo:
+        fifo.write(param + "\n")
 
 
 def notify_updated_ip(old_ip: str, new_ip: str):

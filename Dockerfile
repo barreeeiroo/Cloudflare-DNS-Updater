@@ -1,5 +1,7 @@
 FROM python:3.12-slim as base
 
+VOLUME /notify-pipe
+
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
