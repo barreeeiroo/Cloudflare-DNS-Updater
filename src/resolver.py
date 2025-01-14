@@ -7,7 +7,7 @@ from utils import validate_ip
 
 def _resolve_with_icanhazip():
     try:
-        response = requests.get("https://ipv4.icanhazip.com/")
+        response = requests.get("https://ipv4.icanhazip.com/", timeout=5)
         return response.text
     except Exception as e:
         print(f"Failed to resolve with icanhazip: {e}")
@@ -16,7 +16,7 @@ def _resolve_with_icanhazip():
 
 def _resolve_with_ipify():
     try:
-        response = requests.get("https://api.ipify.org/")
+        response = requests.get("https://api.ipify.org/", timeout=5)
         return response.text
     except Exception as e:
         print(f"Failed to resolve with ipify: {e}")
@@ -25,7 +25,7 @@ def _resolve_with_ipify():
 
 def _resolve_with_1111():
     try:
-        response = requests.get("https://1.1.1.1/cdn-cgi/trace")
+        response = requests.get("https://1.1.1.1/cdn-cgi/trace", timeout=5)
         lines = response.text.split("\n")
         response_map = {line.split("=")[0]: line.split("=")[1] for line in lines if "=" in line}
         return response_map.get("ip")
@@ -36,7 +36,7 @@ def _resolve_with_1111():
 
 def _resolve_with_cloudflare():
     try:
-        response = requests.get("https://cloudflare.com/cdn-cgi/trace")
+        response = requests.get("https://cloudflare.com/cdn-cgi/trace", timeout=5)
         lines = response.text.split("\n")
         response_map = {line.split("=")[0]: line.split("=")[1] for line in lines if "=" in line}
         return response_map.get("ip")
