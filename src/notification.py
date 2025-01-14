@@ -5,8 +5,7 @@ _DOCKER_NOTIFY_PIPE = Path("/notify-pipe")
 
 
 def _is_notification_enabled():
-    # return _DOCKER_NOTIFY_PIPE.exists() and _DOCKER_NOTIFY_PIPE.is_fifo()
-    return False
+    return _DOCKER_NOTIFY_PIPE.exists() and _DOCKER_NOTIFY_PIPE.is_fifo()
 
 
 def _send_unraid_notification(subject: str, description: str, severity: str, message: str):
