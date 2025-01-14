@@ -29,7 +29,7 @@ def get_current_dns_ip() -> Optional[Tuple[str, str]]:
         }
 
         response = requests.get(f"https://api.cloudflare.com/client/v4/zones/{CF_ZONE_ID}/dns_records",
-                                headers=_get_cloudflare_headers(), params=params)
+                                headers=_get_cloudflare_headers(), params=params, timeout=10)
         response_json = response.json()
         if not response_json.get("success"):
             raise RuntimeError(f"Failed to call Cloudflare API: {response_json.get('errors')}")
@@ -55,7 +55,7 @@ def set_current_dns_ip(new_ip_address: str, record_id: str) -> bool:
         }
 
         response = requests.patch(f"https://api.cloudflare.com/client/v4/zones/{CF_ZONE_ID}/dns_records/{record_id}",
-                                  headers=_get_cloudflare_headers(), json=body)
+                                  headers=_get_cloudflare_headers(), json=body, timeout=10)
         response_json = response.json()
         if not response_json.get("success"):
             raise RuntimeError(f"Failed to call Cloudflare API: {response_json.get('errors')}")
