@@ -1,9 +1,11 @@
+from multiprocessing import Process
+
 from cloudflare import get_current_dns_ip, set_current_dns_ip
 from notification import notify_updated_ip, notify_failed_resolution, notify_failed_dns, notify_failed_update
 from resolver import resolve_ip
 
 
-def main():
+def execute():
     ip_address = resolve_ip()
     current_dns, record_id = get_current_dns_ip()
 
@@ -26,6 +28,20 @@ def main():
         exit(1)
 
     notify_updated_ip(old_ip=current_dns, new_ip=ip_address)
+
+
+def main():
+    p = Process(target=execute)
+    p.start()
+
+    # Wait for 10 seconds or until process finishes
+    p.join(50)
+
+    # If thread is still active
+    if p.is_alive():
+        print("Killing process!")
+        p.kill()
+        p.join()
 
 
 if __name__ == "__main__":
